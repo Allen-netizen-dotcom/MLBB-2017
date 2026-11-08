@@ -1,3 +1,4 @@
+
 package com.mlbb2017.offline;
 
 import android.app.Activity;
@@ -6,14 +7,15 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
-import android.view.View;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.widget.*;
 
 public class MainActivity extends Activity {
 
     LinearLayout root;
+    String selectedHero = "Warrior";
+
+    int gold = Color.rgb(255, 205, 90);
+    int dark = Color.rgb(15, 27, 45);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,14 +23,14 @@ public class MainActivity extends Activity {
         showMainMenu();
     }
 
-    private GradientDrawable background(int color) {
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(color);
-        bg.setCornerRadius(18);
-        return bg;
+    GradientDrawable bg(int color) {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(color);
+        d.setCornerRadius(15);
+        return d;
     }
 
-    private TextView text(String value, int size, int color) {
+    TextView label(String value, int size, int color) {
         TextView t = new TextView(this);
         t.setText(value);
         t.setTextSize(size);
@@ -37,64 +39,40 @@ public class MainActivity extends Activity {
         return t;
     }
 
-    private Button makeButton(String value) {
+    Button button(String value) {
         Button b = new Button(this);
         b.setText(value);
         b.setTextColor(Color.WHITE);
-        b.setTextSize(17);
+        b.setTextSize(15);
         b.setTypeface(null, Typeface.BOLD);
-        b.setBackground(background(Color.rgb(150, 85, 25)));
+        b.setBackground(bg(Color.rgb(130, 75, 30)));
         return b;
     }
 
-    private void showMainMenu() {
+    void setup() {
         root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setGravity(Gravity.CENTER);
-        root.setPadding(30, 20, 30, 20);
-        root.setBackgroundColor(Color.rgb(16, 28, 48));
+        root.setPadding(20, 15, 20, 15);
+        root.setBackgroundColor(dark);
+    }
 
-        TextView title = text(
-            "MOBILE LEGENDS",
-            32,
-            Color.rgb(255, 210, 110)
-        );
-        title.setTypeface(null, Typeface.BOLD);
+    void showMainMenu() {
+        setup();
 
-        root.addView(title);
+        root.addView(label("MOBILE LEGENDS", 30, gold));
+        root.addView(label("2017 CLASSIC ERA", 16, Color.WHITE));
 
-        TextView subtitle = text(
-            "2017 CLASSIC ERA • OFFLINE EDITION",
-            14,
-            Color.WHITE
-        );
-        root.addView(subtitle);
+        Button play = button("PLAY OFFLINE");
+        Button heroes = button("HERO COLLECTION");
+        Button settings = button("SETTINGS");
 
-        TextView space = text("", 15, Color.WHITE);
-        root.addView(space);
-
-        Button play = makeButton("PLAY OFFLINE");
         root.addView(play);
-
-        Button heroes = makeButton("HERO COLLECTION");
         root.addView(heroes);
-
-        Button settings = makeButton("SETTINGS");
         root.addView(settings);
 
-        TextView footer = text(
-            "OFFLINE MOBA PROTOTYPE",
-            12,
-            Color.LTGRAY
-        );
-        root.addView(footer);
-
         play.setOnClickListener(v -> showModeMenu());
-
-        heroes.setOnClickListener(v ->
-            showMessage("Hero Collection coming soon!")
-        );
-
+        heroes.setOnClickListener(v -> showHeroes());
         settings.setOnClickListener(v ->
             showMessage("Settings coming soon!")
         );
@@ -102,24 +80,77 @@ public class MainActivity extends Activity {
         setContentView(root);
     }
 
-    private void showModeMenu() {
-        root.removeAllViews();
+    void showModeMenu() {
+        setup();
 
-        TextView title = text(
-            "SELECT GAME MODE",
-            27,
-            Color.YELLOW
-        );
-        root.addView(title);
+        root.addView(label("SELECT GAME MODE", 27, gold));
 
-        Button classic = makeButton("CLASSIC 5V5");
+        Button classic = button("CLASSIC 5V5");
+        Button back = button("BACK");
+
         root.addView(classic);
-
-        Button back = makeButton("BACK");
         root.addView(back);
 
-        classic.setOnClickListener(v ->
-            showMessage("Classic 5v5 offline mode is under development.")
+        classic.setOnClickListener(v -> showHeroes());
+        back.setOnClickListener(v -> showMainMenu());
+
+        setContentView(root);
+    }
+
+    void showHeroes() {
+        setup();
+
+        root.addView(label("SELECT YOUR HERO", 27, gold));
+
+        root.addView(label(
+            "Choose a hero for offline practice",
+            14, Color.WHITE
+        ));
+
+        String[] heroes = {
+            "Warrior",
+            "Mage",
+            "Assassin",
+            "Tank",
+            "Marksman",
+            "Support"
+        };
+
+        LinearLayout grid = new LinearLayout(this);
+        grid.setGravity(Gravity.CENTER);
+        grid.setOrientation(LinearLayout.HORIZONTAL);
+
+        for (String hero : heroes) {
+            Button b = button(hero);
+
+            LinearLayout.LayoutParams params =
+                new LinearLayout.LayoutParams(0, 65, 1);
+
+            params.setMargins(3, 5, 3, 5);
+            grid.addView(b, params);
+
+            b.setOnClickListener(v -> {
+                selectedHero = hero;
+                showHeroes();
+            });
+        }
+
+        root.addView(grid);
+
+        root.addView(label(
+            "SELECTED: " + selectedHero,
+            19, gold
+        ));
+
+        Button confirm = button("CONFIRM HERO");
+        Button back = button("BACK");
+
+        root.addView(confirm);
+        root.addView(back);
+
+        confirm.setOnClickListener(v ->
+            showMessage("Selected hero: " + selectedHero +
+            "\nOffline battle system is under development.")
         );
 
         back.setOnClickListener(v -> showMainMenu());
@@ -127,18 +158,16 @@ public class MainActivity extends Activity {
         setContentView(root);
     }
 
-    private void showMessage(String message) {
-        root.removeAllViews();
+    void showMessage(String message) {
+        setup();
 
-        TextView info = text(message, 20, Color.WHITE);
-        root.addView(info);
+        root.addView(label(message, 20, Color.WHITE));
 
-        Button back = makeButton("BACK TO MENU");
+        Button back = button("BACK TO MENU");
         root.addView(back);
 
         back.setOnClickListener(v -> showMainMenu());
 
         setContentView(root);
     }
-          }
-      
+            }
