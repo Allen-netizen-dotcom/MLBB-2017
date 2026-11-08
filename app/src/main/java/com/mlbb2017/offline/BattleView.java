@@ -6,83 +6,126 @@ import android.view.View;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Color;
+import android.os.Handler;
+import android.os.Looper;
 
 public class BattleView extends View {
 
     Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    Handler handler = new Handler(Looper.getMainLooper());
 
-    float heroX = 300;
-    float heroY = 350;
+    float heroX = 200;
+    float heroY = 300;
+
     float enemyX = 700;
-    float enemyY = 350;
+    float enemyY = 300;
 
-    int health = 100;
+    int playerHealth = 100;
+    int enemyHealth = 100;
+
+    boolean running = true;
+
+    Runnable ai = new Runnable() {
+        @Override
+        public void run() {
+            if (!running) return;
+
+            float dx = heroX - enemyX;
+            float dy = heroY - enemyY;
+
+            float distance = (float) Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 65 && enemyHealth > 0
+                    && playerHealth > 0) {
+
+                enemyX += dx / distance * 5;
+                enemyY += dy / distance * 5;
+
+            } else if (distance <= 65
+                    && playerHealth > 0
+                    && enemyHealth > 0) {
+
+                playerHealth = Math.max(0, playerHealth - 2);
+            }
+
+            invalidate();
+            handler.postDelayed(this, 300);
+        }
+    };
 
     public BattleView(Context context) {
         super(context);
         setFocusable(true);
+        handler.postDelayed(ai, 300);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        float w = getWidth();
-        float h = getHeight();
-
         canvas.drawColor(Color.rgb(50, 105, 65));
 
-        paint.setColor(Color.rgb(80, 125, 75));
-        canvas.drawRect(0, h * 0.4f, w, h * 0.6f, paint);
-
         paint.setColor(Color.rgb(140, 110, 75));
-        canvas.drawRect(0, h * 0.47f, w, h * 0.53f, paint);
+        canvas.drawRect(0, getHeight() * 0.45f,
+                getWidth(), getHeight() * 0.55f, paint);
 
         // Player
         paint.setColor(Color.BLUE);
-        canvas.drawCircle(heroX, heroY, 35, paint);
+        canvas.drawCircle(heroX, heroY, 30, paint);
 
-        // Enemy bot
+        // Enemy
         paint.setColor(Color.RED);
-        canvas.drawCircle(enemyX, enemyY, 35, paint);
+        canvas.drawCircle(enemyX, enemyY, 30, paint);
 
-        // Health bar
-        paint.setColor(Color.BLACK);
-        canvas.drawRect(heroX - 35, heroY - 55,
-                heroX + 35, heroY - 45, paint);
-
-        paint.setColor(Color.GREEN);
-        canvas.drawRect(heroX - 35, heroY - 55,
-                heroX - 35 + (70 * health / 100f),
-                heroY - 45, paint);
-
+        // Player health
         paint.setColor(Color.WHITE);
-        paint.setTextSize(28);
-        canvas.drawText("OFFLINE BATTLE", 30, 40, paint);
-        canvas.drawText("HP: " + health, 30, 80, paint);
+        paint.setTextSize(22);
+        canvas.drawText("PLAYER HP: " + playerHealth,
+                20, 35, paint);
 
-        paint.setColor(Color.RED);
-        canvas.drawCircle(enemyX, enemyY, 12, paint);
+        // Enemy health
+        canvas.drawText("ENEMY HP: " + enemyHealth,
+                20, 65, paint);
+
+        if (playerHealth <= 0) {
+            canvas.drawText("YOU LOSE!", 250, 150, paint);
+        } else if (enemyHealth <= 0) {
+            canvas.drawText("YOU WIN!", 250, 150, paint);
+        }
     }
 
     public void moveHero(float dx, float dy) {
-        heroX += dx;
-        heroY += dy;
+        if (playerHealth <= 0 || enemyHealth <= 0) return;
 
-        heroX = Math.max(40, Math.min(getWidth() - 40, heroX));
-        heroY = Math.max(100, Math.min(getHeight() - 40, heroY));
+        heroX = Math.max(30,
+                Math.min(getWidth() - 30, heroX + dx));
+
+        heroY = Math.max(100,
+                Math.min(getHeight() - 30, heroY + dy));
 
         invalidate();
     }
 
     public void attack() {
+        if (playerHealth <= 0 || enemyHealth <= 0) return;
+
         float dx = heroX - enemyX;
         float dy = heroY - enemyY;
 
-        if (Math.sqrt(dx * dx + dy * dy) < 120) {
-            health = Math.max(0, health - 10);
+        float distance =
+                (float) Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < 120) {
+            enemyHealth = Math.max(0, enemyHealth - 20);
         }
 
         invalidate();
     }
-}
+
+    @Override
+    protected void onDetachedFromWindow() {
+        running = false;
+        handler.removeCallbacks(ai);
+        super.onDetachedFromWindow();
+    }
+                }
