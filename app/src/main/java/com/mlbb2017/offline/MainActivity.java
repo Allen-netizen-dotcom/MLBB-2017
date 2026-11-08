@@ -91,7 +91,7 @@ public class MainActivity extends Activity {
         root.addView(classic);
         root.addView(back);
 
-        classic.setOnClickListener(v -> showHeroes());
+        classic.setOnClickListener(v -> startBattle());
         back.setOnClickListener(v -> showMainMenu());
 
         setContentView(root);
@@ -158,16 +158,63 @@ public class MainActivity extends Activity {
         setContentView(root);
     }
 
-    void showMessage(String message) {
-        setup();
+    
+void showMessage(String message) {
+    setup();
 
-        root.addView(label(message, 20, Color.WHITE));
+    root.addView(label(message, 20, Color.WHITE));
 
-        Button back = button("BACK TO MENU");
-        root.addView(back);
+    Button back = button("BACK TO MENU");
+    root.addView(back);
 
-        back.setOnClickListener(v -> showMainMenu());
+    back.setOnClickListener(v -> showMainMenu());
 
-        setContentView(root);
+    setContentView(root);
+}
+
+void startBattle() {
+    BattleView battle = new BattleView(this);
+
+    LinearLayout screen = new LinearLayout(this);
+    screen.setOrientation(LinearLayout.VERTICAL);
+    screen.setBackgroundColor(Color.rgb(30, 70, 40));
+
+    screen.addView(
+        battle,
+        new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            0,
+            1
+        )
+    );
+
+    LinearLayout controls = new LinearLayout(this);
+    controls.setGravity(Gravity.CENTER);
+
+    Button up = button("UP");
+    Button down = button("DOWN");
+    Button left = button("LEFT");
+    Button right = button("RIGHT");
+    Button attack = button("ATTACK");
+    Button exit = button("EXIT");
+
+    controls.addView(up);
+    controls.addView(down);
+    controls.addView(left);
+    controls.addView(right);
+    controls.addView(attack);
+    controls.addView(exit);
+
+    screen.addView(controls);
+
+    up.setOnClickListener(v -> battle.moveHero(0, -30));
+    down.setOnClickListener(v -> battle.moveHero(0, 30));
+    left.setOnClickListener(v -> battle.moveHero(-30, 0));
+    right.setOnClickListener(v -> battle.moveHero(30, 0));
+
+    attack.setOnClickListener(v -> battle.attack());
+    exit.setOnClickListener(v -> showMainMenu());
+
+    setContentView(screen);
     }
-            }
+    
